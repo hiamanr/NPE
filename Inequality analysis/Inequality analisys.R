@@ -34,13 +34,11 @@ getwd()
 
 ## Opening databases from Brasmod-----------------------------------------------
 
-## Reading files for households-------------------------------------------------
-
 # Setting folder path
 
 folder_path <- "Databases//"
 
-
+## Households' databases--------------------------------------------------------
 # Opening Brasmod databases for year of reference
 
 for(year in 2008:2022){
@@ -61,20 +59,48 @@ for(year in 2008:2022){
   }
 }
 
+## Individuals' databases-------------------------------------------------------
+
+for(year in 2008:2022){
+  
+  file_path <- paste0(folder_path, "bra_", year, "_std.txt")
+  
+  if (file.exists(file_path)) {
+    
+    df <- fread(file_path, sep = "\t", dec = ",")
+    
+    assign(paste0("bra_hh_", year), df)
+    
+    cat("File", file_path, "read successfully.\n")
+    
+  } else {
+    
+    cat("File", file_path, "not found.\n")
+  }
+}
 
 
-# Opening Brasmod databases for simulations
 
-sim_bra_hh_2020 <- fread("C:/Users/lauro/Documents/GitHub/NPE/Databases/bra_2020_sim_std_hh.txt", sep = "\t", dec = ",")
-rbu_bra_hh_2020 <- fread("C:/Users/lauro/Documents/GitHub/NPE/Databases/bra_2020_rbu_std_hh.txt", sep = "\t", dec = ",")
+# Simulations' databases--------------------------------------------------------
+
+# For households
+sim_bra_hh_2020 <- fread("C:/Users/lauro/Documents/GitHub/NPE/Databases/bra_2020_sim_std_hh.txt", 
+                         sep = "\t", dec = ",")
+sim_bra_ind_2020 <- fread("C:/Users/lauro/Documents/GitHub/NPE/Databases/bra_2020_sim_std.txt", 
+                         sep = "\t", dec = ",")
+
+# For individuals
+rbu_bra_hh_2020 <- fread("C:/Users/lauro/Documents/GitHub/NPE/Databases/bra_2020_rbu_std_hh.txt", 
+                         sep = "\t", dec = ",")
+rbu_bra_ind_2020 <- fread("C:/Users/lauro/Documents/GitHub/NPE/Databases/bra_2020_rbu_std.txt", 
+                         sep = "\t", dec = ",")
 
 
 ### Analysis--------------------------------------------------------------------
 
-## Gini-------------------------------------------------------------------------
+## Gini - scenario 1------------------------------------------------------------
 
-# For disposable income
-# Using dineq package
+# Creating list for disposable income
 
 gini_list_dispy <- c()
 
@@ -93,7 +119,7 @@ for(year in 2008:2022){
 
 print(gini_list_dispy)
 
-# For original income
+# Creating list for original income
 
 gini_list_origy <- c()
 
@@ -112,7 +138,7 @@ for(year in 2008:2022){
 
 print(gini_list_origy)
 
-
+## Graphing disposable and original income--------------------------------------
 
 years <- 2008:2022
 
@@ -127,8 +153,8 @@ for(income in income_concepts){
   df <- data.frame(year = 2008:2022,
                    gini = get(paste0("gini_list_", income)),
                    income_concept = case_when(
-                     income == "dispy" ~ "Disposable income",
-                     income == "origy" ~ "Original income"
+                     income == "dispy" ~ "Renda disponível",
+                     income == "origy" ~ "Renda original"
                    ))
   
   
@@ -144,22 +170,24 @@ for(income in income_concepts){
       scale_x_continuous(limits = c(2008, 2022),
                          breaks = seq(2008, 2022, 1)) +
       scale_color_manual(values = color_list) + 
-      labs(title = "Gini index",
-           x = "Year", 
+      labs(title = "Cenário 1: Índice de Gini com Auxílio Emergencial",
+           x = "Ano", 
            y = "Gini",
-           color = "Income Type") +
-      theme_bw()
-    
+           color = "Conceito de renda") +
+      theme_bw() +
+      theme(
+        plot.title = element_text(hjust = 0.5)  # Center the title
+      )
     
     print(plot_final)
   }
   
 }
 
-# Contrafactual scenarios
+## Contrafactual scenarios------------------------------------------------------
+## Gini - scenario 2------------------------------------------------------------
 
-# For disposable income
-# Using dineq package
+# Creating list for Disposable income, replacing for contrafactual data for 2020
 
 gini_dispy_2020 <- gini.wtd(sim_bra_hh_2020$ils_dispy, sim_bra_hh_2020$dwt)
 
@@ -182,11 +210,12 @@ index_2020 <- 2020 - 2008 + 1
 
 # Assuming you have already executed the loop to create gini_list_dispy
 # Update the value at the index corresponding to the year 2020
+
 gini_list_dispy[index_2020] <- gini.wtd(sim_bra_hh_2020$ils_dispy, sim_bra_hh_2020$dwt)
 
 print(gini_list_dispy)
 
-# For original income
+# Creating list for original income
 
 gini_list_origy <- c()
 
@@ -207,16 +236,10 @@ index_2020 <- 2020 - 2008 + 1
 
 # Assuming you have already executed the loop to create gini_list_dispy
 # Update the value at the index corresponding to the year 2020
+
 gini_list_origy[index_2020] <- gini.wtd(sim_bra_hh_2020$ils_origy, sim_bra_hh_2020$dwt)
 
 print(gini_list_origy)
-
-
-
-print(gini_list_origy)
-
-
-
 
 
 
@@ -237,6 +260,8 @@ for(year in 2008:2022){
 
 print(gini_list_origy)
 
+## Plotting graph---------------------------------------------------------------
+
 
 years <- 2008:2022
 
@@ -251,8 +276,8 @@ for(income in income_concepts){
   df <- data.frame(year = 2008:2022,
                    gini = get(paste0("gini_list_", income)),
                    income_concept = case_when(
-                     income == "dispy" ~ "Disposable income",
-                     income == "origy" ~ "Original income"
+                     income == "dispy" ~ "Renda disponível",
+                     income == "origy" ~ "Renda original"
                    ))
   
   
@@ -268,15 +293,147 @@ for(income in income_concepts){
       scale_x_continuous(limits = c(2008, 2022),
                          breaks = seq(2008, 2022, 1)) +
       scale_color_manual(values = color_list) + 
-      labs(title = "Gini index",
-           x = "Year", 
+      labs(title = "Cenário 2: Índice de Gini (sem Auxílio Emergencial)",
+           x = "Ano", 
            y = "Gini",
-           color = "Income Type") +
-      theme_bw()
+           color = "Conceito de renda") +
+      theme_bw()+
+      theme(
+        plot.title = element_text(hjust = 0.5)  # Center the title
+      )
     
     
     print(plot_final)
   }
   
 }
+
+
+## Gini - scenario 3------------------------------------------------------------
+
+# Creating list for Disposable income, replacing for contrafactual data for 2020
+
+gini_dispy_2020 <- gini.wtd(rbu_bra_hh_2020$ils_dispy, rbu_bra_hh_2020$dwt)
+
+gini_list_dispy <- c()
+
+for(year in 2008:2022){
+  name_dispy <- paste0("gini_dispy_", as.character(year))
+  
+  
+  df_dispy <- get(paste0("bra_hh_", as.character(year)))
+  
+  assign(name_dispy, 
+         gini.wtd(df_dispy$ils_dispy, df_dispy$dwt))
+  
+  gini_list_dispy <- c(gini_list_dispy, get(name_dispy))
+  
+}
+
+index_2020 <- 2020 - 2008 + 1
+
+# Assuming you have already executed the loop to create gini_list_dispy
+# Update the value at the index corresponding to the year 2020
+
+gini_list_dispy[index_2020] <- gini.wtd(rbu_bra_hh_2020$ils_dispy, rbu_bra_hh_2020$dwt)
+
+print(gini_list_dispy)
+
+# Creating list for original income
+
+gini_list_origy <- c()
+
+for(year in 2008:2022){
+  name_origy <- paste0("gini_origy_", as.character(year))
+  
+  
+  df_origy <- get(paste0("bra_hh_", as.character(year)))
+  
+  assign(name_origy, 
+         gini.wtd(df_origy$ils_origy, df_origy$dwt))
+  
+  gini_list_origy <- c(gini_list_origy, get(name_origy))
+  
+}
+
+index_2020 <- 2020 - 2008 + 1
+
+# Assuming you have already executed the loop to create gini_list_dispy
+# Update the value at the index corresponding to the year 2020
+
+gini_list_origy[index_2020] <- gini.wtd(rbu_bra_hh_2020$ils_origy, rbu_bra_hh_2020$dwt)
+
+print(gini_list_origy)
+
+
+
+gini_list_origy <- c()
+
+for(year in 2008:2022){
+  name_origy <- paste0("gini_origy_", as.character(year))
+  
+  
+  df_origy <- get(paste0("bra_hh_", as.character(year)))
+  
+  assign(name_origy, 
+         gini.wtd(df_origy$ils_origy, df_origy$dwt))
+  
+  gini_list_origy <- c(gini_list_origy, get(name_origy))
+  
+}
+
+print(gini_list_origy)
+
+## Plotting graph---------------------------------------------------------------
+
+
+years <- 2008:2022
+
+color_list <- c("#FF7276", "#3366ff", "#feff41", "#45ff66")
+
+income_concepts <- c("dispy", "origy")
+
+plot <- ggplot()
+
+for(income in income_concepts){
+  
+  df <- data.frame(year = 2008:2022,
+                   gini = get(paste0("gini_list_", income)),
+                   income_concept = case_when(
+                     income == "dispy" ~ "Renda disponível",
+                     income == "origy" ~ "Renda original"
+                   ))
+  
+  
+  plot <- plot +
+    geom_line(data = df,
+              aes(x = year, y = gini, color = income_concept)) +
+    geom_point(data = df,
+               aes(x = year, y = gini, color = income_concept))
+  
+  if(income == tail(income_concepts, 1)) {
+    plot_final <- plot +
+      scale_y_continuous(limits = c(0.25, 0.75))+
+      scale_x_continuous(limits = c(2008, 2022),
+                         breaks = seq(2008, 2022, 1)) +
+      scale_color_manual(values = color_list) + 
+      labs(title = "Cenário 3: Índice de Gini (com RBU)",
+           x = "Ano", 
+           y = "Gini",
+           color = "Conceito de renda") +
+      theme_bw()+
+      theme(
+        plot.title = element_text(hjust = 0.5)  # Center the title
+      )
+    
+    
+    print(plot_final)
+  }
+  
+}
+
+print(gini_list_dispy)
+
+
+## Race and gender analysis-----------------------------------------------------
 
