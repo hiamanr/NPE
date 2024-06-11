@@ -20,7 +20,7 @@ library(modi)
 #install.packages("acid")
 library(acid)
 
-#install.packages("dineq")
+install.packages("dineq")
 library(dineq)
 
 ## Setting work directory-------------------------------------------------------
@@ -84,21 +84,21 @@ for(year in 2008:2022){
 # Simulations' databases--------------------------------------------------------
 
 # For households
-sim_bra_hh_2020 <- fread("C:/Users/lauro/Documents/GitHub/NPE/Databases/bra_2020_sim_std_hh.txt", 
+sim_bra_hh_2020 <- fread("C:/Users/usuario/Documents/NPE/Databases/bra_2020_sim_std_hh.txt", 
                          sep = "\t", dec = ",")
-sim_bra_ind_2020 <- fread("C:/Users/lauro/Documents/GitHub/NPE/Databases/bra_2020_sim_std.txt", 
+sim_bra_ind_2020 <- fread("C:/Users/usuario/Documents/NPE/Databases/bra_2020_sim_std.txt", 
                          sep = "\t", dec = ",")
 
 # For individuals
-rbu_bra_hh_2020 <- fread("C:/Users/lauro/Documents/GitHub/NPE/Databases/bra_2020_rbu_std_hh.txt", 
+rbu_bra_hh_2020 <- fread("C:/Users/usuario/Documents/NPE/Databases/bra_2020_rbu_std_hh.txt", 
                          sep = "\t", dec = ",")
-rbu_bra_ind_2020 <- fread("C:/Users/lauro/Documents/GitHub/NPE/Databases/bra_2020_rbu_std.txt", 
+rbu_bra_ind_2020 <- fread("C:/Users/usuario/Documents/NPE/Databases/bra_2020_rbu_std.txt", 
                          sep = "\t", dec = ",")
 
-bra_ind_2020 <- fread("C:/Users/lauro/Documents/GitHub/NPE/Databases/bra_2020_std.txt", 
+bra_ind_2020 <- fread("C:/Users/usuario/Documents/NPE/Databases/bra_2020_std.txt", 
                       sep = "\t", dec = ",")
 
-bra_hh_2020 <- fread("C:/Users/lauro/Documents/GitHub/NPE/Databases/bra_2020_std_hh.txt", 
+bra_hh_2020 <- fread("C:/Users/usuario/Documents/NPE/Databases/bra_2020_std_hh.txt", 
                      sep = "\t", dec = ",")
 
 
@@ -439,6 +439,52 @@ for(income in income_concepts){
 }
 
 print(gini_list_dispy)
+
+
+## Combine data for all scenarios------------------------------------------------
+
+years <- 2008:2022
+
+# Create a data frame for all scenarios and income concepts
+df_combined <- data.frame(
+  year = rep(years, 6),
+  gini = c(gini_list_dispy_1, gini_list_origy_1, 
+           gini_list_dispy_2, gini_list_origy_2,
+           gini_list_dispy_3, gini_list_origy_3),
+  income_concept = factor(rep(c("Renda disponível", "Renda original"), each = length(years))),
+  scenario = factor(rep(c("Cenário 1", "Cenário 1", "Cenário 2", "Cenário 2", "Cenário 3", "Cenário 3"), each = length(years)))
+)
+
+## Plotting combined graph------------------------------------------------------
+
+color_list <- c("Renda disponível" = "#FF7276", "Renda original" = "#3366ff")
+shape_list <- c("Cenário 1" = 16, "Cenário 2" = 17, "Cenário 3" = 18)
+
+plot_final <- ggplot(df_combined, aes(x = year, y = gini, color = income_concept, shape = scenario)) +
+  geom_line(aes(linetype = scenario)) +
+  geom_point() +
+  scale_y_continuous(limits = c(0.25, 0.75))+
+  scale_x_continuous(limits = c(2008, 2022),
+                     breaks = seq(2008, 2022, 1)) +
+  scale_color_manual(values = color_list) + 
+  scale_shape_manual(values = shape_list) +
+  labs(title = "",
+       x = "Ano", 
+       y = "Gini",
+       color = "Conceito de renda",
+       shape = "Cenário",
+       linetype = "Cenário") +
+  theme_bw() +
+  theme(
+    plot.title = element_text(hjust = 0.5)  # Center the title
+  )
+
+print(plot_final)
+
+png("plot_final.png", width = 4800, height = 3200, res = 300)
+
+ggsave("plot_final.png", plot = plot_final, width = 10, height = 6)
+
 
 
 ## Race and gender analysis-----------------------------------------------------
